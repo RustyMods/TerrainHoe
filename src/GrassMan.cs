@@ -91,11 +91,6 @@ public static class GrassMan
         if (hm == null) return Heightmap.Biome.None;
         return hm.GetBiomeFromMesh(point);
     }
-    
-    
-    
-    
-    /////
 
     [HarmonyPatch(typeof(ClutterSystem), nameof(ClutterSystem.GenerateVegPatch))]
     private static class ClutterSystem_GenerateVegPatch_Prefix
