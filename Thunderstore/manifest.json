@@ -1,9 +1,9 @@
 {
-  "name": "YOURMODNAME_HERE",
-  "version_number": "1.0.0",
-  "website_url": "https://discord.gg/pdHgy6Bsng",
-  "description": "Your mod description goes here. Do not forget to replace the icon.png file with your own. Must be 256x256. Your Readme.md file will be copied from the one in your project folder.",
+  "name": "MoreTerrainTypes",
+  "description": "This mod allows you to use the other biome terrain types with the cultivator.",
+  "version_number": "1.0.4",
+  "website_url": "https://github.com/RustyMods/TerrainHoe",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2202"
+    "denikson-BepInExPack_Valheim-5.4.2333"
   ]
 }

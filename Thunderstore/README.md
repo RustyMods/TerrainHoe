@@ -28,7 +28,7 @@
 ---
 
 ## The Ravenwood TV Community
-Feel free to join our discord at https://discord.gg/h6cDGkgE8h
+Feel free to join our discord at https://discord.gg/h6cDGkgE8h 
 
 
 You can see my other mods at: https://thunderstore.io/c/valheim/p/JamesJonesTV/
