@@ -1,0 +1,31 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.75f1
+CRC: 4249028078
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: e9f37a7e66e7cd858ffef46fb6993d6c
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5527383dc91eba37123fc67ad6efaa19
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 9c3dea49dcd503b4030613800f853b96
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/_TerrainHoe/plains_grass_icon.png
+- Assets/_TerrainHoe/swamp_grass_icon.png
+- Assets/_TerrainHoe/lava_ground_icon.png
+- Assets/_TerrainHoe/ashland_grass_icon.png
+- Assets/_TerrainHoe/meadows_grass_icon.png
+- Assets/_TerrainHoe/blackforest_grass_icon.png
+- Assets/_TerrainHoe/mistlands_grass_icon.png
+- Assets/_TerrainHoe/mistlands_ground_icon.png
+- Assets/_TerrainHoe/paved_dark_icon.png
+- Assets/_TerrainHoe/paved_grass_icon.png
+- Assets/_TerrainHoe/snow_icon.png
+Dependencies: []

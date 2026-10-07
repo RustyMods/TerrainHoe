@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using HarmonyLib;
 using UnityEngine;
 
 namespace TerrainHoe;
@@ -85,6 +86,17 @@ public class PaintOptions : MonoBehaviour
         sb.Append($", LevelOffset: <color=orange>{m_tool.terrainOp.m_settings.m_levelOffset}</color>");
         m_pieceInfo = Localization.instance.Localize(sb.ToString());
     }
+
+    [HarmonyPatch(typeof(Hud), nameof(Hud.SetupPieceInfo))]
+    private static class Hud_SetupPieceInfo_Patch
+    {
+        private static void Postfix(Hud __instance, Piece piece)
+        {
+            if (piece == null || instance == null) return;
+            __instance.m_pieceDescription.text = instance.m_pieceInfo;
+        }
+    }
+
 
     private bool UpdateRadius(float scroll)
     {

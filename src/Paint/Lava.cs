@@ -8,7 +8,7 @@ public class Lava : IPaint
     {
         isBiomePaint = true;
         overrideAlpha = true;
-        // piece.m_icon = SpriteManager.GetSprite("lava_icon.png");
+        piece.m_icon = AssetBundleMan.GetSprite( "lava_ground_icon.png");
     }
     
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

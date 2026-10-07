@@ -7,7 +7,7 @@ public class SwampGrass : IPaint
     public SwampGrass(string id, string name, int index = 1) : base(id, name, PaintMan.GetPaintType("SwampGrass"), index)
     {
         isBiomePaint = true;
-        // piece.m_icon = SpriteManager.GetSprite("swamp_grass_icon.png");
+        piece.m_icon = AssetBundleMan.GetSprite( "swamp_grass_icon.png");
     }
 
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

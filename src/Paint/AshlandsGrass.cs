@@ -10,8 +10,8 @@ public class AshlandsGrass : IPaint
         isBiomePaint = true;
         overrideAlpha = true;
         forceGrass = true;
-
-        // piece.m_icon = SpriteManager.GetSprite("ashlands_grass_icon.png");
+        
+        piece.m_icon = AssetBundleMan.GetSprite( "ashland_grass_icon.png");
     }
     
     public override Color GetColor() => new Color(0f, 0f, 0f, 0f);

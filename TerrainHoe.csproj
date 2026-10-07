@@ -126,16 +126,17 @@
         <Compile Include="Managers\LocalizationManager.cs"/>
         <Compile Include="Plugin.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="src\AssetBundleMan.cs" />
         <Compile Include="src\GrassMan.cs" />
         <Compile Include="src\IPaint.cs" />
         <Compile Include="src\MockManager.cs" />
         <Compile Include="src\PaintMan.cs" />
+        <Compile Include="src\PaintOptions.cs" />
         <Compile Include="src\Paint\AshlandsGrass.cs" />
         <Compile Include="src\Paint\BlackForestGrass.cs" />
         <Compile Include="src\Paint\Lava.cs" />
         <Compile Include="src\Paint\MeadowsGrass.cs" />
         <Compile Include="src\Paint\MistlandsGrass.cs" />
-        <Compile Include="src\Paint\PaintOptions.cs" />
         <Compile Include="src\Paint\PavedDark.cs" />
         <Compile Include="src\Paint\PavedGrass.cs" />
         <Compile Include="src\Paint\PlainsGrass.cs" />
@@ -154,9 +155,20 @@
     </ItemGroup>
     <ItemGroup>
         <Content Include=".gitignore"/>
-        <Content Include="assets\DropAssetBundleInThisFolder.txt"/>
+        <Content Include="assets\terrain_hoe" />
+        <Content Include="assets\terrain_hoe.manifest" />
         <Content Include="environment.props"/>
-        <Content Include="icons\README.txt"/>
+        <EmbeddedResource Include="icons\ashland_grass_icon.png" />
+        <EmbeddedResource Include="icons\blackforest_grass_icon.png" />
+        <EmbeddedResource Include="icons\lava_ground_icon.png" />
+        <EmbeddedResource Include="icons\meadows_grass_icon.png" />
+        <EmbeddedResource Include="icons\mistlands_grass_icon.png" />
+        <EmbeddedResource Include="icons\mistlands_ground_icon.png" />
+        <EmbeddedResource Include="icons\paved_dark_icon.png" />
+        <EmbeddedResource Include="icons\paved_grass_icon.png" />
+        <EmbeddedResource Include="icons\plains_grass_icon.png" />
+        <EmbeddedResource Include="icons\snow_icon.png" />
+        <EmbeddedResource Include="icons\swamp_grass_icon.png" />
         <Content Include="ILRepack.targets"/>
         <Content Include="Libs\ServerSync.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

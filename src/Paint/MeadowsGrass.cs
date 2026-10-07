@@ -7,7 +7,7 @@ public class MeadowsGrass : IPaint
     public MeadowsGrass(string id, string name, int index = 1) : base(id, name, PaintMan.GetPaintType("MeadowsGrass"), index)
     {
         isBiomePaint = true;
-        // piece.m_icon = SpriteManager.GetSprite("grass_icon.png");
+        piece.m_icon = AssetBundleMan.GetSprite( "meadows_grass_icon.png");
     }
 
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

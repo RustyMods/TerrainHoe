@@ -14,7 +14,7 @@ namespace TerrainHoe;
 public class TerrainHoePlugin : BaseUnityPlugin
 {
     internal const string ModName = "TerrainHoe";
-    internal const string ModVersion = "1.0.0";
+    internal const string ModVersion = "1.0.4";
     internal const string Author = "RustyMods";
     private const string ModGUID = Author + "." + ModName;
     private static readonly string ConfigFileName = ModGUID + ".cfg";
@@ -42,8 +42,6 @@ public class TerrainHoePlugin : BaseUnityPlugin
         //Localizer.Load();
 
         instance = this;
-        
-        PaintMan.Init();
         
         _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On,
             "If on, the configuration is locked and can be changed by server admins only.");

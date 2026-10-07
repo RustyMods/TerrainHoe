@@ -1,3 +1,5 @@
+## 1.0.4
+Deep north update
 ## 1.0.3
 Fixed an additional console error spam. Also fixed configs sometimes not saving modded items as part of recipes. 
 ## 1.0.2

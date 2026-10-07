@@ -8,7 +8,7 @@ public class BlackForestGrass : IPaint
         PaintMan.GetPaintType("BlackForestGrass"), index)
     {
         isBiomePaint = true;
-        // piece.m_icon = SpriteManager.GetSprite("forest_grass_icon.png");
+        piece.m_icon = AssetBundleMan.GetSprite( "blackforest_grass_icon.png");
     }
     
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

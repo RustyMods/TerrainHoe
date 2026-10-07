@@ -10,42 +10,48 @@ namespace TerrainHoe;
 
 public static class PaintMan
 {
-    private static readonly Dictionary<string, TerrainModifier.PaintType> paintTypes;
-    private static readonly Dictionary<TerrainModifier.PaintType, string> customPaintTypes;
+    private static readonly Dictionary<string, TerrainModifier.PaintType> paintTypes = new Dictionary<string, TerrainModifier.PaintType>();
+    private static readonly Dictionary<TerrainModifier.PaintType, string> customPaintTypes = new Dictionary<TerrainModifier.PaintType, string>();
 
-    static PaintMan()
+    [HarmonyPatch(typeof(Enum), nameof(Enum.GetValues))]
+    private static class Enum_GetValues_Patch
     {
-        paintTypes = new Dictionary<string, TerrainModifier.PaintType>();
-        customPaintTypes = new Dictionary<TerrainModifier.PaintType, string>();
+        private static void Postfix(Type enumType, ref Array __result)
+        {
+            if (enumType != typeof(TerrainModifier.PaintType)) return;
+            if (paintTypes.Count == 0) return;
+            TerrainModifier.PaintType[] f = new TerrainModifier.PaintType[__result.Length + paintTypes.Count];
+            __result.CopyTo(f, 0);
+            paintTypes.Values.CopyTo(f, __result.Length);
+            __result = f;
+        }    
     }
 
-    public static void Init()
+    [HarmonyPatch(typeof(Enum), nameof(Enum.GetNames))]
+    private static class Enum_GetNames_Patch
     {
-        Harmony harmony = TerrainHoePlugin.instance._harmony;
-        harmony.Patch(AccessTools.Method(typeof(Enum), nameof(Enum.GetValues)),
-            postfix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_Enum_GetValues))));
-        harmony.Patch(AccessTools.Method(typeof(Enum), nameof(Enum.GetNames)),
-            postfix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_Enum_GetNames))));
-        harmony.Patch(AccessTools.Method(typeof(Enum), nameof(Enum.GetName)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_Enum_GetName))));
-        
-        harmony.Patch(AccessTools.Method(typeof(TerrainComp), nameof(TerrainComp.PaintCleared)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_TerrainComp_PaintCleared))));
-        harmony.Patch(AccessTools.Method(typeof(TerrainComp), nameof(TerrainComp.Awake)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_TerrainComp_Awake))));
-        harmony.Patch(AccessTools.Method(typeof(TerrainComp), nameof(TerrainComp.Initialize)),
-            postfix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_TerrainComp_Initialize))));
-        harmony.Patch(AccessTools.Method(typeof(TerrainComp), nameof(TerrainComp.Save)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_TerrainComp_Save))));
-        harmony.Patch(AccessTools.Method(typeof(TerrainComp), nameof(TerrainComp.Load)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_TerrainComp_Load))));
-        
-        harmony.Patch(AccessTools.Method(typeof(Heightmap), nameof(Heightmap.RebuildRenderMesh)),
-            transpiler: new HarmonyMethod(AccessTools.Method(typeof(PaintMan),
-                nameof(Transpile_Heightmap_RebuildRenderMesh))));
-        
-        harmony.Patch(AccessTools.Method(typeof(Character), nameof(Character.UpdateLava)),
-            postfix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_Character_UpdateLava))));
+        private static void Postfix(Type enumType, ref string[] __result)
+        {
+            if (enumType != typeof(TerrainModifier.PaintType)) return;
+            if (paintTypes.Count == 0) return;
+            __result = __result.AddRangeToArray(paintTypes.Keys.ToArray());
+        }
+    }
+
+    [HarmonyPatch(typeof(Enum), nameof(Enum.GetName))]
+    private static class Enum_GetName_Patch
+    {
+        private static bool Prefix(Type enumType, object value, ref string __result)
+        {
+            if (enumType != typeof(TerrainModifier.PaintType)) return true;
+            if (customPaintTypes.TryGetValue((TerrainModifier.PaintType)value, out string data))
+            {
+                __result = data;
+                return false;
+            }
+
+            return true;
+        }
     }
 
     
@@ -93,80 +99,55 @@ public static class PaintMan
         return map;
     }
 
-    private static void Patch_Enum_GetValues(Type enumType, ref Array __result)
+    [HarmonyPatch(typeof(TerrainComp), nameof(TerrainComp.PaintCleared))]
+    private static class TerrainComp_PaintCleared_Patch
     {
-        if (enumType != typeof(TerrainModifier.PaintType)) return;
-        if (paintTypes.Count == 0) return;
-        TerrainModifier.PaintType[] f = new TerrainModifier.PaintType[__result.Length + paintTypes.Count];
-        __result.CopyTo(f, 0);
-        paintTypes.Values.CopyTo(f, __result.Length);
-        __result = f;
-    }
-
-    private static bool Patch_Enum_GetName(Type enumType, object value, ref string __result)
-    {
-        if (enumType != typeof(TerrainModifier.PaintType)) return true;
-        if (customPaintTypes.TryGetValue((TerrainModifier.PaintType)value, out string data))
+        private static bool Prefix(
+            TerrainComp __instance,
+            Vector3 worldPos,
+            Vector3 rot,
+            TerrainOp.Settings settings)
         {
-            __result = data;
+            if (!IPaint.TryGetPaintTool(settings.m_paintType, out IPaint paint)) return true;
+        
+            TerrainColors terrainColors = __instance.GetComponent<TerrainColors>();
+            if (settings.m_halfOffset)
+            {
+                worldPos.x -= 0.5f;
+                worldPos.z -= 0.5f;
+            }
+
+            float heightOffset  = worldPos.y - __instance.transform.position.y;
+            __instance.m_hmap.WorldToVertexMask(worldPos, out int x, out int y);
+            float radiusInVertices = settings.m_paintRadius / __instance.m_hmap.m_scale;
+            int vertexSearchRadius = Mathf.CeilToInt(radiusInVertices);
+            Vector2 centerVertex = new Vector2(x, y);
+            
+            for (int i = y - vertexSearchRadius; 
+                 i <= y + vertexSearchRadius; 
+                 ++i)
+            {
+                UpdatePaints(
+                    __instance, 
+                    terrainColors,
+                    paint, 
+                    centerVertex, 
+                    x, 
+                    vertexSearchRadius, 
+                    i, 
+                    settings.m_paintHeightCheck, 
+                    heightOffset, 
+                    radiusInVertices,
+                    worldPos);
+            }
+
+            if (paint.isBiomePaint)
+            {
+                terrainColors.m_terrainComp.m_hmap.RebuildRenderMesh();
+            }
+        
             return false;
         }
-
-        return true;
-    }
-
-    private static void Patch_Enum_GetNames(Type enumType, ref string[] __result)
-    {
-        if (enumType != typeof(TerrainModifier.PaintType)) return;
-        if (paintTypes.Count == 0) return;
-        __result = __result.AddRangeToArray(paintTypes.Keys.ToArray());
-    }
-
-    private static bool Patch_TerrainComp_PaintCleared(
-        TerrainComp __instance,
-        Vector3 worldPos,
-        Vector3 rot,
-        TerrainOp.Settings settings)
-    {
-        if (!IPaint.TryGetPaintTool(settings.m_paintType, out IPaint paint)) return true;
-        
-        TerrainColors terrainColors = __instance.GetComponent<TerrainColors>();
-        if (settings.m_halfOffset)
-        {
-            worldPos.x -= 0.5f;
-            worldPos.z -= 0.5f;
-        }
-
-        float heightOffset  = worldPos.y - __instance.transform.position.y;
-        __instance.m_hmap.WorldToVertexMask(worldPos, out int x, out int y);
-        float radiusInVertices = settings.m_paintRadius / __instance.m_hmap.m_scale;
-        int vertexSearchRadius = Mathf.CeilToInt(radiusInVertices);
-        Vector2 centerVertex = new Vector2(x, y);
-            
-        for (int i = y - vertexSearchRadius; 
-             i <= y + vertexSearchRadius; 
-             ++i)
-        {
-            UpdatePaints(
-                __instance, 
-                terrainColors,
-                paint, 
-                centerVertex, 
-                x, 
-                vertexSearchRadius, 
-                i, 
-                settings.m_paintHeightCheck, 
-                heightOffset, 
-                radiusInVertices,
-                worldPos);
-        }
-
-        if (paint.isBiomePaint)
-        {
-            terrainColors.m_terrainComp.m_hmap.RebuildRenderMesh();
-        }
-        
-        return false;
     }
     
     private static void UpdatePaints(
@@ -441,31 +422,63 @@ public static class PaintMan
         
         return neighbors;
     }
-    
-    private static void Patch_TerrainComp_Awake(TerrainComp __instance) => __instance.gameObject.AddComponent<TerrainColors>();
 
-    private static void Patch_TerrainComp_Initialize(TerrainComp __instance) => __instance.GetComponent<TerrainColors>()?.Initialize();
-    
-    private static void Patch_TerrainComp_Save(TerrainComp __instance) => __instance.GetComponent<TerrainColors>()?.Save();
-
-    private static void Patch_TerrainComp_Load(TerrainComp __instance) => __instance.GetComponent<TerrainColors>()?.Load();
-
-    private static IEnumerable<CodeInstruction> Transpile_Heightmap_RebuildRenderMesh(
-        IEnumerable<CodeInstruction> instructions)
+    [HarmonyPatch(typeof(TerrainComp), nameof(TerrainComp.Awake))]
+    private static class TerrainComp_Awake_Patch
     {
-        MethodInfo target = AccessTools.Method(typeof(Mesh), nameof(Mesh.GetVertices));
-        MethodInfo insert = AccessTools.Method(typeof(PaintMan), nameof(Apply_TerrainColor_Modifiers));
-        CodeInstruction[] newInstructions =
+        private static void Prefix(TerrainComp __instance)
         {
-            new(OpCodes.Ldarg_0), 
-            new(OpCodes.Call, insert)
-        };
+            __instance.gameObject.AddComponent<TerrainColors>();
+        }
+    }
+
+    [HarmonyPatch(typeof(TerrainComp), nameof(TerrainComp.Initialize))]
+    private static class TerrainComp_Initialize_Patch
+    {
+        private static void Postfix(TerrainComp __instance)
+        {
+            __instance.GetComponent<TerrainColors>()?.Initialize();
+        }
+    }
+
+
+    [HarmonyPatch(typeof(TerrainComp), nameof(TerrainComp.Save))]
+    private static class TerrainComp_Save_Patch
+    {
+        private static void Prefix(TerrainComp __instance)
+        {
+            __instance.GetComponent<TerrainColors>()?.Save();
+        }   
+    }
+
+    [HarmonyPatch(typeof(TerrainComp), nameof(TerrainComp.Load))]
+    private static class TerrainComp_Load_Patch
+    {
+        private static void Prefix(TerrainComp __instance)
+        {
+            __instance.GetComponent<TerrainColors>()?.Load();
+        }
+    }
+
+    [HarmonyPatch(typeof(Heightmap), nameof(Heightmap.RebuildRenderMesh))]
+    private static class Heightmap_RebuildRenderMesh_Patch
+    {
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            MethodInfo target = AccessTools.Method(typeof(Mesh), nameof(Mesh.GetVertices));
+            MethodInfo insert = AccessTools.Method(typeof(PaintMan), nameof(Apply_TerrainColor_Modifiers));
+            CodeInstruction[] newInstructions =
+            {
+                new(OpCodes.Ldarg_0), 
+                new(OpCodes.Call, insert)
+            };
             
-        return new CodeMatcher(instructions)
-            .Start()
-            .MatchStartForward(new CodeMatch(OpCodes.Callvirt, target))
-            .Insert(newInstructions)
-            .InstructionEnumeration();
+            return new CodeMatcher(instructions)
+                .Start()
+                .MatchStartForward(new CodeMatch(OpCodes.Callvirt, target))
+                .Insert(newInstructions)
+                .InstructionEnumeration();
+        }
     }
     private static void Apply_TerrainColor_Modifiers(Heightmap heightmap)
     {
@@ -508,42 +521,45 @@ public static class PaintMan
         return component.GetBiome(hm, point);
     }
 
-
-    private static void Patch_Character_UpdateLava(Character __instance, float dt)
+    [HarmonyPatch(typeof(Character), nameof(Character.UpdateLava))]
+    private static class Character_UpdateLava_Patch
     {
-        if (__instance.m_tolerateFire) return;
+        private static void Postfix(Character __instance, float dt)
+        {
+            if (__instance.m_tolerateFire) return;
             
-        if (!TerrainColors.TryFindTerrainColors(__instance.transform.position, out TerrainColors colors)) return;
-        if (!colors.m_initialized) return;
+            if (!TerrainColors.TryFindTerrainColors(__instance.transform.position, out TerrainColors colors)) return;
+            if (!colors.m_initialized) return;
         
-        colors.m_terrainComp.m_hmap.WorldToVertex(__instance.transform.position, out int x, out int y);
-        // int index = y * (colors.m_width + 1) + x;
-        int index = Util.GetIndex(x, y, colors.m_terrainComp.m_pitch);
-        bool modified = colors.m_modifiedTerrain[index];
-        if (!modified)
-        {
-            if (!WorldGenerator.IsAshlands(__instance.transform.position.x, __instance.transform.position.z))
+            colors.m_terrainComp.m_hmap.WorldToVertex(__instance.transform.position, out int x, out int y);
+            // int index = y * (colors.m_width + 1) + x;
+            int index = Util.GetIndex(x, y, colors.m_terrainComp.m_pitch);
+            bool modified = colors.m_modifiedTerrain[index];
+            if (!modified)
             {
-                __instance.m_lavaHeatLevel -= dt * __instance.m_heatCooldownBase;
-            }
-        }
-        else
-        {
-            Color32 color = colors.m_terrainMask[index];
-            Color paint = colors.m_terrainComp.m_paintMask[index];
-            bool isLava = color.r > 200 && color.a > 200 && paint.a > 0.6f;
-            
-            if (isLava)
-            {
-                __instance.m_lavaHeatLevel += dt * __instance.m_heatBuildupBase *
-                                              (1f - __instance.GetEquipmentHeatResistanceModifier());
+                if (!WorldGenerator.IsAshlands(__instance.transform.position.x, __instance.transform.position.z))
+                {
+                    __instance.m_lavaHeatLevel -= dt * __instance.m_heatCooldownBase;
+                }
             }
             else
             {
-                __instance.m_lavaHeatLevel -= dt * __instance.m_heatCooldownBase;
-            }
-        }
+                Color32 color = colors.m_terrainMask[index];
+                Color paint = colors.m_terrainComp.m_paintMask[index];
+                bool isLava = color.r > 200 && color.a > 200 && paint.a > 0.6f;
             
-        __instance.m_lavaHeatLevel = Mathf.Clamp(__instance.m_lavaHeatLevel, 0.0f, 1.0f);
+                if (isLava)
+                {
+                    __instance.m_lavaHeatLevel += dt * __instance.m_heatBuildupBase *
+                                                  (1f - __instance.GetEquipmentHeatResistanceModifier());
+                }
+                else
+                {
+                    __instance.m_lavaHeatLevel -= dt * __instance.m_heatCooldownBase;
+                }
+            }
+            
+            __instance.m_lavaHeatLevel = Mathf.Clamp(__instance.m_lavaHeatLevel, 0.0f, 1.0f);
+        }
     }
 }

@@ -53,7 +53,9 @@ public abstract class IPaint
         piece.m_name = name;
         piece.m_description = name + "_desc";
         piece.m_vegetationGroundOnly = false;
+        piece.m_canRotate = true;
         piece.m_category = Piece.PieceCategory.Misc;
+        piece.m_usage = Piece.UsageTagFlags.Misc;
         terrainOp = prefab.GetComponent<TerrainOp>();
         terrainOp.m_settings.m_paintType = type;
         terrainOp.m_settings.m_level = false;

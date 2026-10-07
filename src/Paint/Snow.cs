@@ -8,7 +8,7 @@ public class Snow : IPaint
     {
         isBiomePaint = true;
         
-        // piece.m_icon = SpriteManager.GetSprite("snow_icon.png");
+        piece.m_icon = AssetBundleMan.GetSprite( "snow_icon.png");
     }
 
     public override Color GetColor() => Color.clear;
