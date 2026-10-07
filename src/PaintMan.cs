@@ -160,6 +160,12 @@ public static class PaintMan
                 radiusInVertices,
                 worldPos);
         }
+
+        if (paint.isBiomePaint)
+        {
+            terrainColors.m_terrainComp.m_hmap.RebuildRenderMesh();
+        }
+        
         return false;
     }
     
@@ -207,34 +213,17 @@ public static class PaintMan
         Vector3 worldPos)
     {
         float distanceFromCenter = Vector2.Distance(centerVertex, new Vector2(vertex_x, vertex_y));
-        int gridStride = comp.m_width + 1;
                     
-        bool withinBounds = vertex_x >= 0 && vertex_y >= 0 && vertex_x < gridStride && vertex_y < gridStride;
+        bool withinBounds = vertex_x >= 0 && vertex_y >= 0 && vertex_x < comp.m_pitch && vertex_y < comp.m_pitch;
         bool passesHeightCheck = !heightCheck || comp.m_hmap.GetHeight(vertex_x, vertex_y) <= heightOffset;
 
         if (withinBounds && passesHeightCheck)
         {
-            // int index = vertex_y * gridStride + vertex_x;
             int index = Util.GetIndex(vertex_x, vertex_y, comp.m_pitch);
             
             PaintMask(comp, paint, index, vertex_x, vertex_y, distanceFromCenter, radiusInVertices, worldPos);
             PaintTerrain(terrainColors, paint, index, vertex_x, vertex_y, distanceFromCenter, radiusInVertices, worldPos);
-            
-            if (paint.reset)
-            {
-                comp.m_modifiedHeight[index] = false;
-                comp.m_levelDelta[index] = 0f;
-                comp.m_smoothDelta[index] = 0f;
-
-                // if (comp.TryGetNeighbor(worldPos, vertex_x, vertex_y, radiusInVertices) is {} neighbor)
-                // {
-                //     neighbor.GetNearestVertex(comp, vertex_x, vertex_y, out int x, out int y);
-                //     var i = Util.GetIndex(neighbor, x, y);
-                //     neighbor.m_modifiedHeight[i] = false;
-                //     neighbor.m_levelDelta[i] = 0f;
-                //     neighbor.m_smoothDelta[i] = 0f;
-                // }
-            }
+            PaintElevation(comp, paint, index);
         }
     }
 
@@ -279,7 +268,10 @@ public static class PaintMan
             else
             {
                 color = paint.GetColor();
-                if (!paint.overrideAlpha) color.a = current.a;
+                if (!paint.overrideAlpha)
+                {
+                    color.a = current.a;
+                }
             }
         
             comp.m_modifiedPaint[index] = true;
@@ -326,6 +318,25 @@ public static class PaintMan
             }
                 
             colors.SetBiomeColor(index, color, paint.forceGrass);
+        }
+    }
+
+    private static void PaintElevation(TerrainComp comp, IPaint paint, int index)
+    {
+        if (paint.reset)
+        {
+            comp.m_modifiedHeight[index] = false;
+            comp.m_levelDelta[index] = 0f;
+            comp.m_smoothDelta[index] = 0f;
+
+            // if (comp.TryGetNeighbor(worldPos, vertex_x, vertex_y, radiusInVertices) is {} neighbor)
+            // {
+            //     neighbor.GetNearestVertex(comp, vertex_x, vertex_y, out int x, out int y);
+            //     var i = Util.GetIndex(neighbor, x, y);
+            //     neighbor.m_modifiedHeight[i] = false;
+            //     neighbor.m_levelDelta[i] = 0f;
+            //     neighbor.m_smoothDelta[i] = 0f;
+            // }
         }
     }
 
@@ -463,12 +474,13 @@ public static class PaintMan
         if (!TerrainColors.TryFindTerrainColors(heightmap.transform.position, out TerrainColors terrainColors)) return;
         if (!terrainColors.m_initialized) return;
 
-        int num = heightmap.m_width + 1;
-        for (int x = 0; x < num; ++x)
+        int pitch = heightmap.m_width + 1;
+        for (int x = 0; x < pitch; ++x)
         {
-            for (int y = 0; y < num; ++y)
+            for (int y = 0; y < pitch; ++y)
             {
-                int index = x * num + y;
+                // int index = x * pitch + y;
+                var index = Util.GetIndex(x, y, pitch);
                 bool modified = terrainColors.m_modifiedTerrain[index];
                 if (!modified) continue;
                 Color32 color = terrainColors.m_terrainMask[index];
@@ -505,7 +517,8 @@ public static class PaintMan
         if (!colors.m_initialized) return;
         
         colors.m_terrainComp.m_hmap.WorldToVertex(__instance.transform.position, out int x, out int y);
-        int index = y * (colors.m_width + 1) + x;
+        // int index = y * (colors.m_width + 1) + x;
+        int index = Util.GetIndex(x, y, colors.m_terrainComp.m_pitch);
         bool modified = colors.m_modifiedTerrain[index];
         if (!modified)
         {

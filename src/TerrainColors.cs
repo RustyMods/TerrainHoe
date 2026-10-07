@@ -100,7 +100,7 @@ public class TerrainColors : MonoBehaviour
         m_terrainMask[index] = color;
         m_forceGrass[index] = forceGrass;
     }
-
+    
     public void ResetTerrain(int index)
     {
         if (!m_initialized) return;
