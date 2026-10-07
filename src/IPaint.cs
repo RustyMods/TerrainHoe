@@ -21,6 +21,7 @@ public abstract class IPaint
     public bool blend = true;
     public bool isBiomePaint;
     public bool blendTerrain = true;
+    public bool forceGrass = false;
     public bool reset;
 
     [HarmonyPatch(typeof(ObjectDB), nameof(ObjectDB.Awake))]

@@ -43,17 +43,12 @@ public static class PaintMan
         harmony.Patch(AccessTools.Method(typeof(Heightmap), nameof(Heightmap.RebuildRenderMesh)),
             transpiler: new HarmonyMethod(AccessTools.Method(typeof(PaintMan),
                 nameof(Transpile_Heightmap_RebuildRenderMesh))));
-
-        harmony.Patch(AccessTools.Method(typeof(ClutterSystem), nameof(ClutterSystem.GetPatchBiomes)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan),
-                nameof(Patch_ClutterSystem_GetPatchBiomes))));
-        harmony.Patch(AccessTools.Method(typeof(ClutterSystem), nameof(ClutterSystem.GetGroundInfo)),
-            prefix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_ClutterSystem_GetGroundInfo))));
-
+        
         harmony.Patch(AccessTools.Method(typeof(Character), nameof(Character.UpdateLava)),
             postfix: new HarmonyMethod(AccessTools.Method(typeof(PaintMan), nameof(Patch_Character_UpdateLava))));
     }
 
+    
     public static bool TryGetPaintType(string name, out TerrainModifier.PaintType paintType)
     {
         if (Enum.TryParse(name, true, out paintType)) return true;
@@ -224,6 +219,7 @@ public static class PaintMan
             
             PaintMask(comp, paint, index, vertex_x, vertex_y, distanceFromCenter, radiusInVertices, worldPos);
             PaintTerrain(terrainColors, paint, index, vertex_x, vertex_y, distanceFromCenter, radiusInVertices, worldPos);
+            
             if (paint.reset)
             {
                 comp.m_modifiedHeight[index] = false;
@@ -329,7 +325,7 @@ public static class PaintMan
                 color = paint.GetBiomeColor();
             }
                 
-            colors.SetBiomeColor(index, color);
+            colors.SetBiomeColor(index, color, paint.forceGrass);
         }
     }
 
@@ -481,7 +477,7 @@ public static class PaintMan
         }
     }
 
-    private static Heightmap.Biome GetBiomeFromMesh(
+    public static Heightmap.Biome GetBiomeFromMesh(
         this Heightmap hm, 
         Vector3 point, 
         float oceanLevel = 0.02f, 
@@ -500,83 +496,6 @@ public static class PaintMan
         return component.GetBiome(hm, point);
     }
 
-    private static Heightmap.Biome GetBiomeFromMeshColor(Vector3 point)
-    {
-        if (ZoneSystem.instance && !ZoneSystem.instance.IsZoneLoaded(point))
-        {
-            return Heightmap.Biome.None;
-        }
-        Heightmap hm = Heightmap.FindHeightmap(point);
-        if (hm == null) return Heightmap.Biome.None;
-        return hm.GetBiomeFromMesh(point);
-    }
-    
-
-
-    private static bool Patch_ClutterSystem_GetPatchBiomes(Vector3 center, float halfSize, ref Heightmap.Biome __result)
-    {
-        Heightmap.Biome biome = GetPatchBiomesByMesh(center, halfSize);
-        if (biome == Heightmap.Biome.None) return true;
-        __result = biome;
-        return false;
-    }
-    
-    private static Heightmap.Biome GetPatchBiomesByMesh(Vector3 center, float halfSize)
-    {
-        Heightmap.Biome bc1 = GetBiomeFromMeshColor(new Vector3(center.x - halfSize, 0.0f, center.z - halfSize));
-        Heightmap.Biome bc2 = GetBiomeFromMeshColor(new Vector3(center.x + halfSize, 0.0f, center.z - halfSize));
-        Heightmap.Biome bc3 = GetBiomeFromMeshColor(new Vector3(center.x - halfSize, 0.0f, center.z + halfSize));
-        Heightmap.Biome bc4 = GetBiomeFromMeshColor(new Vector3(center.x + halfSize, 0.0f, center.z + halfSize));
-        
-        if (bc1 == Heightmap.Biome.None ||
-            bc2 == Heightmap.Biome.None ||
-            bc3 == Heightmap.Biome.None ||
-            bc4 == Heightmap.Biome.None)
-        {
-            return Heightmap.Biome.None;
-        }
-        return bc1 | bc2 | bc4 | bc3;
-    }
-
-    private static bool Patch_ClutterSystem_GetGroundInfo(
-        ClutterSystem __instance, 
-        Vector3 p, 
-        out Vector3 point,
-        out Vector3 normal, 
-        out Heightmap hmap, 
-        out Heightmap.Biome biome, 
-        ref bool __result)
-    {
-        var result = __instance.GetGroundInfoByMesh(p, out point, out normal, out hmap, out biome);
-        if (biome == Heightmap.Biome.None) return true;
-        __result = result;
-        return false;
-    }
-    
-    private static bool GetGroundInfoByMesh(
-        this ClutterSystem cs, 
-        Vector3 p, 
-        out Vector3 point, 
-        out Vector3 normal, 
-        out Heightmap hmap,
-        out Heightmap.Biome biome)
-    {
-        Vector3 origin = p + Vector3.up * 500f;
-        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 1000f, cs.m_placeRayMask))
-        {
-            point = hit.point;
-            normal = hit.normal;
-            hmap = hit.collider.GetComponent<Heightmap>();
-            biome = hmap.GetBiomeFromMesh(point);
-            return true;
-        }
-
-        point = p;
-        normal = Vector3.up;
-        hmap = null;
-        biome = Heightmap.Biome.None;
-        return false;
-    }
 
     private static void Patch_Character_UpdateLava(Character __instance, float dt)
     {

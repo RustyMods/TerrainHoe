@@ -10,6 +10,8 @@ public class TerrainColors : MonoBehaviour
     public int m_width;
     public bool[] m_modifiedTerrain;
     public Color32[] m_terrainMask;
+    public bool[] m_forceGrass;
+    
     public bool m_initialized;
     
     public TerrainComp m_terrainComp;
@@ -33,6 +35,7 @@ public class TerrainColors : MonoBehaviour
         int num = m_width + 1;
         m_modifiedTerrain = new bool[num * num];
         m_terrainMask = new Color32[num * num];
+        m_forceGrass = new bool[num * num];
         m_initialized = true;
     }
 
@@ -46,6 +49,8 @@ public class TerrainColors : MonoBehaviour
         {
             bool modified = m_modifiedTerrain[i];
             pkg.Write(modified);
+            bool forceGrass = m_forceGrass[i];
+            pkg.Write(forceGrass);
             if (modified)
             {
                 Color32 color = m_terrainMask[i];
@@ -70,7 +75,9 @@ public class TerrainColors : MonoBehaviour
         for (int i = 0; i < length; ++i)
         {
             bool modified = pkg.ReadBool();
+            bool forceGrass = pkg.ReadBool();
             m_modifiedTerrain[i] = modified;
+            m_forceGrass[i] = forceGrass;
             if (modified)
             {
                 byte r = pkg.ReadByte();
@@ -86,11 +93,12 @@ public class TerrainColors : MonoBehaviour
         }
     }
 
-    public void SetBiomeColor(int index, Color32 color)
+    public void SetBiomeColor(int index, Color32 color, bool forceGrass = false)
     {
         if (!m_initialized) return;
         m_modifiedTerrain[index] = true;
         m_terrainMask[index] = color;
+        m_forceGrass[index] = forceGrass;
     }
 
     public void ResetTerrain(int index)
@@ -98,6 +106,7 @@ public class TerrainColors : MonoBehaviour
         if (!m_initialized) return;
         m_modifiedTerrain[index] = false;
         m_terrainMask[index] = new Color32();
+        m_forceGrass[index] = false;
     }
 
     public void ApplyToHeightmap(Heightmap hm)
@@ -107,12 +116,12 @@ public class TerrainColors : MonoBehaviour
         List<Color32> colors = new List<Color32>();
         hm.m_renderMesh.GetColors(colors);
             
-        int num = hm.m_width + 1;
-        for (int x = 0; x < num; ++x)
+        int pitch = hm.m_width + 1;
+        for (int x = 0; x < pitch; ++x)
         {
-            for (int y = 0; y < num; ++y)
+            for (int y = 0; y < pitch; ++y)
             {
-                int index = x * num + y;
+                int index = x * pitch + y;
                 bool modified = m_modifiedTerrain[index];
                 if (modified)
                 {
@@ -155,7 +164,59 @@ public class TerrainColors : MonoBehaviour
             return hm.GetBiome(point);
         }
     }
+    
+    public bool HasModifiedVertex(Vector3 center, float halfSize)
+    {
+        if (!m_initialized) return false;
 
+        Heightmap hm = m_terrainComp.m_hmap;
+        int pitch = hm.m_width + 1;
+
+        hm.WorldToVertex(new Vector3(center.x - halfSize, 0f, center.z - halfSize), out int minX, out int minY);
+        hm.WorldToVertex(new Vector3(center.x + halfSize, 0f, center.z + halfSize), out int maxX, out int maxY);
+
+        minX = Mathf.Max(0, minX);
+        minY = Mathf.Max(0, minY);
+        maxX = Mathf.Min(pitch - 1, maxX);
+        maxY = Mathf.Min(pitch - 1, maxY);
+
+        for (int y = minY; y <= maxY; ++y)
+        {
+            int row = y * pitch;
+            for (int x = minX; x <= maxX; ++x)
+            {
+                if (m_modifiedTerrain[row + x]) return true;
+            }
+        }
+        return false;
+    }
+    
+    public bool HasForcedGrassVertex(Vector3 center, float halfSize)
+    {
+        if (!m_initialized) return false;
+
+        Heightmap hm = m_terrainComp.m_hmap;
+        int pitch = hm.m_width + 1;
+
+        hm.WorldToVertex(new Vector3(center.x - halfSize, 0f, center.z - halfSize), out int minX, out int minY);
+        hm.WorldToVertex(new Vector3(center.x + halfSize, 0f, center.z + halfSize), out int maxX, out int maxY);
+
+        minX = Mathf.Max(0, minX);
+        minY = Mathf.Max(0, minY);
+        maxX = Mathf.Min(pitch - 1, maxX);
+        maxY = Mathf.Min(pitch - 1, maxY);
+
+        for (int y = minY; y <= maxY; ++y)
+        {
+            int row = y * pitch;
+            for (int x = minX; x <= maxX; ++x)
+            {
+                if (m_forceGrass[row + x]) return true;
+            }
+        }
+        return false;
+    }
+    
     public static bool TryFindTerrainColors(Vector3 pos, out TerrainColors instance)
     {
         for (int i = 0; i < instances.Count; ++i)
