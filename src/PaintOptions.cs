@@ -78,7 +78,7 @@ public class PaintOptions : MonoBehaviour
             "Scroll",
             KeyCode.LeftShift,
             KeyCode.Q,
-            KeyCode.F,
+            KeyCode.R,
             KeyCode.L);
         sb.Append($"SmoothPower: <color=orange>{m_tool.terrainOp.m_settings.m_smoothPower}</color>");
         sb.Append($", RaisePower: <color=orange>{m_tool.terrainOp.m_settings.m_raisePower}</color>");
@@ -154,7 +154,7 @@ public class PaintOptions : MonoBehaviour
 
     private bool UpdateRaise(float scroll)
     {
-        if (!ZInput.GetKey(KeyCode.F)) return false;
+        if (!ZInput.GetKey(KeyCode.R)) return false;
         
         bool changed = false;
         

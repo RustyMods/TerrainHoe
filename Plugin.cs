@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using JetBrains.Annotations;
+using LocalizationManager;
 using ServerSync;
 
 namespace TerrainHoe;
@@ -39,7 +40,7 @@ public class TerrainHoePlugin : BaseUnityPlugin
 
     public void Awake()
     {
-        //Localizer.Load();
+        Localizer.Load();
 
         instance = this;
         

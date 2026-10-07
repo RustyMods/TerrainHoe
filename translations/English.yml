@@ -1,2 +1,18 @@
-# Ready to use english translation file for the plugin
-# (for more information on LocalizationManager, see the LocalizationManager documentation https://github.com/blaxxun-boop/LocalizationManager#example-project).
+piece_lava: Lava
+piece_lava_desc: ""
+piece_paved_grass: Paved Grass
+piece_paved_grass_desc: "" 
+piece_paved_dark: Paved Dark
+piece_paved_dark_desc: ""
+piece_mistlands_grass: Mistlands Grass
+piece_mistlands_grass_desc: ""
+piece_blackforest_grass: Black Forest Grass
+piece_blackforest_grass_desc: ""
+piece_plains_grass: Plains Grass
+piece_plains_grass_desc: ""
+piece_snow: Snow
+piece_snow_desc: ""
+piece_swamp_grass: Swamp Grass
+piece_swamp_grass_desc: ""
+piece_meadows_grass: Meadows Grass
+piece_meadows_grass_desc: ""
