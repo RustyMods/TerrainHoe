@@ -99,6 +99,21 @@ public class TerrainHoePlugin : BaseUnityPlugin
         }
     }
 
+    [HarmonyPatch(typeof(Player), nameof(Player.CanRotatePiece))]
+    private static class Player_CanRotatePiece_Patch
+    {
+        private static void Postfix(Player __instance, ref bool __result)
+        {
+            if (__result) return;
+            var piece = __instance.m_buildPieces.GetSelectedPiece();
+            if (piece == null) return;
+            if (IPaint.IsPaintTool(piece))
+            {
+                __result = true;
+            }
+        }
+    }
+
     private void OnDestroy()
     {
         Config.Save();
