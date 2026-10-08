@@ -9,6 +9,8 @@ public class Lava : IPaint
         isBiomePaint = true;
         overrideAlpha = true;
         piece.m_icon = AssetBundleMan.GetSprite( "lava_ground_icon.png");
+
+        RequiredItems.Add("SulfurStone", 1, false);
     }
     
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

@@ -14,9 +14,9 @@ namespace TerrainHoe;
 [BepInPlugin(ModGUID, ModName, ModVersion)]
 public class TerrainHoePlugin : BaseUnityPlugin
 {
-    internal const string ModName = "TerrainHoe";
+    internal const string ModName = "MoreTerrainTypes";
     internal const string ModVersion = "1.0.4";
-    internal const string Author = "RustyMods";
+    internal const string Author = "JamesJonesTV";
     private const string ModGUID = Author + "." + ModName;
     private static readonly string ConfigFileName = ModGUID + ".cfg";
     private static readonly string ConfigFileFullPath = Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
@@ -79,6 +79,8 @@ public class TerrainHoePlugin : BaseUnityPlugin
             _ = new SwampGrass("piece_paint_swamp_grass", "$piece_swamp_grass");
             _ = new MeadowsGrass("piece_paint_meadows_grass", "$piece_meadows_grass");
             _ = new Reset("piece_paint_reset", "$piece_reset_all");
+            
+            foreach(var tool in IPaint.m_paintTools.Values) tool.SetupConfigs();
         }
     }
     
@@ -128,7 +130,7 @@ public class TerrainHoePlugin : BaseUnityPlugin
         }
     }
 
-    private ConfigEntry<T> config<T>(string group, string name, T value, ConfigDescription description,
+    public ConfigEntry<T> config<T>(string group, string name, T value, ConfigDescription description,
         bool synchronizedSetting = true)
     {
         ConfigDescription extendedDescription =

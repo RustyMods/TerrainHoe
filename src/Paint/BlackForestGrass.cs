@@ -9,6 +9,8 @@ public class BlackForestGrass : IPaint
     {
         isBiomePaint = true;
         piece.m_icon = AssetBundleMan.GetSprite( "blackforest_grass_icon.png");
+
+        RequiredItems.Add("Resin", 1, false);
     }
     
     public override Color GetColor() => new Color(0f, 0f, 0f, 1f);

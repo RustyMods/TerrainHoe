@@ -42,11 +42,11 @@ public static class AssetBundleMan
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
 
-        string path = $"{TerrainHoePlugin.ModName}.{folderName}.{fileName}";
+        string path = $"TerrainHoe.{folderName}.{fileName}";
         using var stream = assembly.GetManifestResourceStream(path);
         if (stream == null) return null;
         byte[] buffer = new byte[stream.Length];
-        var _ = stream.Read(buffer, 0, buffer.Length);
+        _ = stream.Read(buffer, 0, buffer.Length);
         Texture2D texture = new Texture2D(2, 2);
         
         Sprite sprite = texture.LoadImage4x(buffer) ? Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero) : null;
@@ -54,7 +54,8 @@ public static class AssetBundleMan
         return sprite;
     }
     
-    private static readonly MethodInfo LoadImage = AccessTools.Method(typeof(ImageConversion), nameof(ImageConversion.LoadImage), new [] { typeof(Texture2D), typeof(byte[]) });
+    private static readonly MethodInfo LoadImage = AccessTools.Method(typeof(ImageConversion), nameof(ImageConversion.LoadImage),
+        [typeof(Texture2D), typeof(byte[])]);
     public static bool LoadImage4x(this Texture2D tex, byte[] data)
     {
         return (bool)LoadImage.Invoke(null, [tex , data]);

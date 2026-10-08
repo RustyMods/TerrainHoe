@@ -1,9 +1,9 @@
 {
   "name": "MoreTerrainTypes",
-  "description": "This mod allows you to use the other biome terrain types with the cultivator.",
+  "description": "This mod allows you to use the other biome terrain types with the hoe.",
   "version_number": "1.0.4",
   "website_url": "https://github.com/RustyMods/TerrainHoe",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2333"
+    "denikson-BepInExPack_Valheim-5.4.2351"
   ]
 }

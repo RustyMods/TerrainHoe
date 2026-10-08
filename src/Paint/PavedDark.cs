@@ -8,6 +8,8 @@ public class PavedDark : IPaint
         id, name, PaintMan.GetPaintType("PavedCultivated"), index)
     {
         piece.m_icon = AssetBundleMan.GetSprite( "paved_dark_icon.png");
+
+        RequiredItems.Add("Stone", 1, false);
     }
     
     public override Color GetColor() => new Color(0f, 1f, 0.5f, 1f);
