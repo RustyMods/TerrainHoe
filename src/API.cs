@@ -38,11 +38,13 @@ public static class API
 {
     public static Heightmap.Biome GetBiome(Vector3 position)
     {
-        return Heightmap.Biome.Meadows;
+        var hmap = Heightmap.FindHeightmap(position);
+        if (hmap == null) return Heightmap.Biome.None;
+        return hmap.GetBiomeFromMesh(position);
     }
 
     public static Heightmap.Biome GetBiome(Heightmap heightmap, Vector3 position)
     {
-        return Heightmap.Biome.Meadows;
+        return heightmap.GetBiomeFromMesh(position);
     }
 }
