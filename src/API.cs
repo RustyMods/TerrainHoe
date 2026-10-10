@@ -43,7 +43,7 @@ public static class API
         return hmap.GetBiomeFromMesh(position);
     }
 
-    public static Heightmap.Biome GetBiome(Heightmap heightmap, Vector3 position)
+    public static Heightmap.Biome GetHeightmapBiome(Heightmap heightmap, Vector3 position)
     {
         return heightmap.GetBiomeFromMesh(position);
     }
